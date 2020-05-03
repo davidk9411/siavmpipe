@@ -1,9 +1,7 @@
 /*
-Assignment 3 _ SIA VM
+Assignment 4 _ PIPED SIAVM
 Made by David Kim
-Last Modified: 04/10/2020
-
-Includes: 3R type instructions and MOVE type instructions 
+Last Modified: 04/21/2020
 */
 
 #include <stdio.h>
@@ -11,109 +9,190 @@ Includes: 3R type instructions and MOVE type instructions
 #include <string.h>
 #include <limits.h>
 
-//Personally defined header
-//refer to the define.h file for further details
-#include "define.h"
+//Personally defined headers
+#include "functions.h"
+#include "constants.h"
 
-//Global Variable goes here
+//External Global Variables(System resources)
 extern Memory sys_memory;
 extern int cpu_register[NUM_REG];
-extern unsigned char current_instruction[4];
 extern int halt;
 extern int mem_counter;
+extern unsigned char *current_instruction[3];
+extern int **reg_forwarder;
+extern int *target_addr;
+extern int immediate_val; 
+extern void (*executer)();
+extern void (*storer)(int*,int);
 
-/*Opcode 1: ADD
-to avoid "implicit declaration of function 'add' is invalid in C99"
-using function name as addr which means add between registers
-*/
+//OPCODE 0: HALT
+void halt_SIA(){
+
+    halt = TRUE;
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    executer = NULL;
+}
+
+//OPCODE 1: ADD
 void addr(){
-
-    /*Internal registers
-    0=op1, 1=op2, 2=result(target)
-    note this is an array*/
+     
+    //Generates internal register
     int *internal_reg[3];
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,1);
-    //Performs ADDITION
-    *internal_reg[2]=(*internal_reg[0])+(*internal_reg[1]);
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+    
+    //Assigns target data for store action
+    immediate_val = *internal_reg[0] + *internal_reg[1];
+    target_addr = internal_reg[2];
+    //Assign proper store action for next cycle
+    storer=store_reg;
+    
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    free(reg_forwarder);
+    executer = NULL;
+    
+    return;
 }
 
 //OPCODE 2: AND
 void andr(){
 
-    //Internal registers
+    //Generates internal register
     int *internal_reg[3];
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,1);
-    //Performs BITWISE AND
-    *internal_reg[2]=(*internal_reg[0])&(*internal_reg[1]);
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+    
+    //Assigns target data for store action
+    immediate_val = *internal_reg[0] & *internal_reg[1];
+    target_addr = internal_reg[2];
+    //Assign proper store action for next cycle
+    storer=store_reg;
+
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    free(reg_forwarder);
+    executer = NULL;
+
+    return;
 }
 
 //OPCODE 3: DIVIDE
 void divider(){
 
-    //Internal registers
+    //Generates internal register
     int *internal_reg[3];
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,1);
-    //Performs DIVISION
-    *internal_reg[2]=(*internal_reg[0])/(*internal_reg[1]);
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+    
+    //Assigns target data for store action
+    immediate_val = *internal_reg[0] / *internal_reg[1];
+    target_addr = internal_reg[2];
+    //Assign proper store action for next cycle
+    storer=store_reg;
+
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    free(reg_forwarder);
+    executer = NULL;
+
+    return;
 }
 
 //OPCODE 4: MULTIPLY
 void multiplyr(){
 
-    //Internal registers
+
+    //Generates internal register
     int *internal_reg[3];
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,1);
-    //Performs MULTIPLICATION
-    *internal_reg[2]=(*internal_reg[0])*(*internal_reg[1]);
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+    
+    //Assigns target data for store action
+    immediate_val = *internal_reg[0] * (*internal_reg[1]);
+    target_addr = internal_reg[2];
+    //Assign proper store action for next cycle
+    storer=store_reg;
+
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    free(reg_forwarder);
+    executer = NULL;
+    return;
 }
 
 //OPCODE 5: SUBTRACT
 void subtractr(){
-        
-    //Internal registers
+
+    //Generates internal register
     int *internal_reg[3];
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,1);
-    //Performs SUBTRACTION
-    *internal_reg[2]=(*internal_reg[0])-(*internal_reg[1]);
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+    
+    //Assigns target data for store action
+    immediate_val = *internal_reg[0] - (*internal_reg[1]);
+    target_addr = internal_reg[2];
+    //Assign proper store action for next cycle
+    storer=store_reg;
+
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    free(reg_forwarder);
+    executer = NULL;
+    return;
 }
 
 //OPCODE 6: OR
 void orr(){
 
-    //Internal registers
+    //Generates internal register
     int *internal_reg[3];
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,1);
-    //Performs BITWISE OR
-    *internal_reg[2]=(*internal_reg[0])|(*internal_reg[1]);
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+    
+    //Assigns target data for store action
+    immediate_val = *internal_reg[0] | (*internal_reg[1]);
+    target_addr = internal_reg[2];    
+    //Assign proper store action for next cycle
+    storer=store_reg;
+
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    free(reg_forwarder);
+    executer = NULL;
+    return;
 }
 
-//Opcode 11: Move
+//OPCODE 11: MOVE
 void move(){
 
     //Isolates register number from first byte of instruction
-    int reg_indicator = current_instruction[0] % 16;
+    int reg_indicator = *(current_instruction[2]+0) % 16;
+
     /*
     Obtains immediate value,
     note that type of register is unsigned char
     in order to use signed value, typecast to char is required
     */
-    int immediate_value = (char)current_instruction[1];
-    //Assign immediate value to register
-    cpu_register[reg_indicator] = immediate_value;
+   int immediate_value = (char)(*(current_instruction[2]+1));
+   //Assigns immediate value to variable to store ops
+   target_addr = &cpu_register[reg_indicator];
+   immediate_val = immediate_value;
+   
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    executer = NULL;
+
+   //Assign proper operation to storer pointer
+   storer = store_reg;
 }
 
-//Opcode 12: Interrupt
-//Based on immediate value prints registers or memory
+//OPCODE 12: INTERRUPT
 void interrupt(){
-    
+
     //Condition check
-    if(current_instruction[1]==0){
+    if(*(current_instruction[2]+1)==0){
         //Prints registers
         print_green();
         puts("REGISTER INFORMATION: DECIMAL(HEX)");
@@ -129,6 +208,11 @@ void interrupt(){
             unsigned char mem_val = mem_search(&sys_memory,i);
             mem_val == 0xff ? printf("M%d:\t%s\n",i,"NULL") : printf("M%d:\t%03d(%02X)\n",i,mem_val,mem_val);
         }
+        print_reset();
     }
+    
+    //reset buffers for next cycle
+    free(current_instruction[2]);
+    executer = NULL;
 }
 

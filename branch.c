@@ -1,9 +1,7 @@
 /*
-Assignment 3 _ SIA VM
+Assignment 4 _ PIPED SIAVM
 Made by David Kim
-Last Modified: 04/13/2020
-
-Includes: BRANCH INSTRUCTIONS
+Last Modified: 04/21/2020
 */
 
 #include <stdio.h>
@@ -11,230 +9,249 @@ Includes: BRANCH INSTRUCTIONS
 #include <string.h>
 #include <limits.h>
 
-//Personally defined header
-//refer to the define.h file for further details
-#include "define.h"
+//Personally defined headers
+#include "functions.h"
+#include "constants.h"
 
-//Global Variable goes here
+//External Global Variables(System resources)
 extern Memory sys_memory;
 extern int cpu_register[NUM_REG];
-extern unsigned char current_instruction[4];
 extern int halt;
 extern int mem_counter;
+extern unsigned char *current_instruction[3];
+extern int **reg_forwarder;
+extern int *target_addr;
+extern int immediate_val; 
+extern void (*executer)();
+extern void (*storer)(int*,int);
+extern int fetch_more;
+extern int mem_addr;
+extern unsigned char *ditributed_val;
+extern void (*sotrer_mem)(int,unsigned char*);
 
-//OPCODE 7: BRANCH
-//Note this is for decode process purpose
-int decode_branch(){
-
-    int type = current_instruction[0] % 16;
-    switch (type)
-    {
-    // TYPE 0: BRANCHIFLESS
-    case 0:
-        if_less();
-        return 0;
-    // TYPE 1: BRANCHIFLESSEQUAL
-    case 1:
-        if_less_equal();
-        return 0;
-    // TYPE 2: BRANCHIFEQUAL
-    case 2:
-        if_equal();
-        return 0;
-    // TYPE 3: BRANCHIFNOTEQUAL
-    case 3:
-        if_not_equal();
-        return 0;
-    // TYPE 4: BRAMCHIFGREATER
-    case 4:
-        if_greater();
-        return 0;
-    // TYPE 5: BRAMCHIFGREATEREQUAL
-    case 5:
-        if_greater_equal();
-        return 0;
-    // TYPE 6: CALL
-    case 6:
-        call_fn();
-        return 0;
-    // TYPE 7: JUMP
-    case 7:
-        jump();
-        return 0;
-    //Unsupported branch type
-    default:
-        return 1;
-    }
-}
-
-//TYPE 0: BRANCHIFLESS
 void if_less(){
 
-    /*Internal registers
-    0=op1, 1=op2
-    note this is an array*/
+    //Generates internal register
     int *internal_reg[2];
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
 
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,2);
+    //IF LESS
+    if(*internal_reg[0]<(*internal_reg[1])){
 
-    //check if less
-    if(*internal_reg[0]<*internal_reg[1]){
-
-        int offset = ((int)current_instruction[2] << 8) + current_instruction[3]; 
+        //Memory offset calculation
+        int offset = ((int)(current_instruction[2][2])<<8) + current_instruction[2][3];
         mem_counter += (2*offset);
     }
-    //false case
-    else
-        mem_counter += 2;
-}
-
-//TYPE 1: BRANCHIFLESSEQUAL
-void if_less_equal(){
-
-    //Internal registers
-    int *internal_reg[2];
-
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,2);
-
-    //check if less equal
-    if(*internal_reg[0]<=(*internal_reg[1])){
-
-        int offset = ((int)current_instruction[2] << 8) + current_instruction[3]; 
-        mem_counter += (2*offset);
-    }
-    //false case
-    else
-        mem_counter += 2;
-}
-
-//TYPE 2: BRANCHIFEQUAL
-void if_equal(){
-
-    //Internal registers
-    int *internal_reg[2];
-
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,2);
-
-    //check if equal
-    if(*internal_reg[0]==(*internal_reg[1])){
-
-        int offset = ((int)current_instruction[2] << 8) + current_instruction[3]; 
-        mem_counter += (2*offset);
-    }
-    //false case
+    //FALSE Statement
     else
         mem_counter += 4;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    //Frees the register forwarder
+    free(reg_forwarder);
+    executer = NULL;
+    fetch_more = TRUE;
 }
 
-//TYPE 3: BRANCHIFNOTEQUAL
+void if_less_equal(){
+    
+
+    //Generates internal register
+    int *internal_reg[2];
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+
+    //IF LESS
+    if(*internal_reg[0]<=(*internal_reg[1])){
+
+        //Memory offset calculation
+        int offset = ((int)(current_instruction[2][2])<<8) + current_instruction[2][3];
+        mem_counter += (2*offset);
+    }
+    //FALSE Statement
+    else
+        mem_counter += 4;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    //Frees the register forwarder
+    free(reg_forwarder);
+    executer = NULL;
+    fetch_more = TRUE;
+}
+
+void if_equal(){
+
+
+    //Generates internal register
+    int *internal_reg[2];
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
+
+    //IF LESS
+    if(*internal_reg[0]==(*internal_reg[1])){
+
+        //Memory offset calculation
+        int offset = ((int)(current_instruction[2][2])<<8) + current_instruction[2][3];
+        mem_counter += (2*offset);
+    }
+    //FALSE Statement
+    else
+        mem_counter += 4;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    //Frees the register forwarder
+    free(reg_forwarder);
+    executer = NULL;
+    fetch_more = TRUE;
+}
+
 void if_not_equal(){
 
-    //Internal registers
+
+    //Generates internal register
     int *internal_reg[2];
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
 
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,2);
-
-    //check if not equal
+    //IF LESS
     if(*internal_reg[0]!=(*internal_reg[1])){
 
-        int offset = ((int)current_instruction[2] << 8) + current_instruction[3]; 
+        //Memory offset calculation
+        int offset = ((int)(current_instruction[2][2])<<8) + current_instruction[2][3];
         mem_counter += (2*offset);
     }
-    //false case
+    //FALSE Statement
     else
-        mem_counter += 2;
+        mem_counter += 4;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    //Frees the register forwarder
+    free(reg_forwarder);
+    executer = NULL;
+    fetch_more = TRUE;
 }
 
-//TYPE 4: BRANCHIFGREATER
 void if_greater(){
 
-    //Internal registers
+
+    //Generates internal register
     int *internal_reg[2];
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
 
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,2);
-
-    //check if greater
+    //IF LESS
     if(*internal_reg[0]>(*internal_reg[1])){
 
-        int offset = ((int)current_instruction[2] << 8) + current_instruction[3]; 
+        //Memory offset calculation
+        int offset = ((int)(current_instruction[2][2])<<8) + current_instruction[2][3];
         mem_counter += (2*offset);
     }
-    //false case
+    //FALSE Statement
     else
-        mem_counter += 2;
+        mem_counter += 4;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    //Frees the register forwarder
+    free(reg_forwarder);
+    executer = NULL;
+    fetch_more = TRUE;
 }
 
-//TYPE 5: BRANCHIFGREATEREQUAL
 void if_greater_equal(){
 
-    //Internal registers
+    //Generates internal register
     int *internal_reg[2];
+    //Copies data from register forwarder
+    memcpy(internal_reg,reg_forwarder,sizeof(internal_reg));
 
-    //Handles internal register issues using seperate function
-    get_registers(internal_reg,2);
-
-    //check if greater equal
+    //IF LESS
     if(*internal_reg[0]>=(*internal_reg[1])){
 
-        int offset = ((int)current_instruction[2] << 8) + current_instruction[3]; 
+        //Memory offset calculation
+        int offset = ((int)(current_instruction[2][2])<<8) + current_instruction[2][3];
         mem_counter += (2*offset);
     }
-    //false case
+    //FALSE Statement
     else
-        mem_counter += 2;
+        mem_counter += 4;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    //Frees the register forwarder
+    free(reg_forwarder);
+    executer = NULL;
+    fetch_more = TRUE;
 }
 
-//TYPE 6: CALL
 void call_fn(){
 
     unsigned int address = 0;
 
-    //Addes up bits of address from current register (NEEDS TO BE FIXED)
-    /*for (int i=1; i<sizeof(current_instruction)/sizeof(unsigned char); i++)
-        address+=current_instruction[i];
-    */
-
-   address+=current_instruction[1]<<16;
-   address+=current_instruction[2]<<8;
-   address+=current_instruction[3];
+    //Addes up bits of address from current register
+    for(int i=1; i<=3; i++){
+        address+=(current_instruction[2][i])<<(24-8*i);
+    }
 
     //Values to store
     unsigned char values[4];
 
     //Divide values by bytes
-    handle_val(mem_counter+4,values);
+    hadle_val(mem_counter+4,values);
 
-    //Write to memory (PUSH)
-    for(int i=0; i<sizeof(values)/sizeof(unsigned char); i++)
-        mem_wirte(&sys_memory,values[i],cpu_register[15]+i);
+    ditributed_val=(unsigned char *)malloc(sizeof(unsigned char)*4);
+    memcpy(ditributed_val,values,sizeof(unsigned char)*4);
+    mem_addr=cpu_register[15];
+
+    sotrer_mem=store_mem;    
 
     //Move R15 to next location
     cpu_register[15]-=4;
 
     //Multiplies 2 to jump specified location
     address*=2;
-    
+
     //Indicates next instruction location address
     mem_counter = address;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    executer = NULL;
+    fetch_more = TRUE;
 }
 
 //TYPE 7: JUMP
 void jump(){
 
-    unsigned int address;
+
+    unsigned int address=0;
 
     //Addes up bits of address from current register
-    for (int i=1; i<sizeof(current_instruction)/sizeof(unsigned char); i++)
-        address+=current_instruction[i];
+    for (int i=2; i<4; i++)
+        address+=current_instruction[2][i];
 
     //Multiplies 2 to jump specified location
     address*=2;
 
     //Indicates next instruction location address
     mem_counter = address;
+
+    //Frees the instruction memory
+    free(current_instruction[2]);
+    executer = NULL;
+    fetch_more = TRUE;
+
+}
+//Value devider
+void hadle_val(int reg_val, unsigned char *arr){
+
+    arr[0] = reg_val>>24;
+    arr[1] = (reg_val>>16)%256;
+    arr[2] = (reg_val>>8)%256;
+    arr[3] = reg_val%256;
 }

@@ -1,8 +1,8 @@
 compile:
-	gcc -c *.c
+	gcc -o siavm *.c
 
-output:
-	gcc -o siavm *.o
+object:
+	gcc -c *.c
 
 debug:
 	gcc -g -o siavm *.c
