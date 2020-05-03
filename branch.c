@@ -29,6 +29,7 @@ extern int mem_addr;
 extern unsigned char *ditributed_val;
 extern void (*sotrer_mem)(int,unsigned char*);
 
+//TYPE 0: IFLESS
 void if_less(){
 
     //Generates internal register
@@ -55,6 +56,7 @@ void if_less(){
     fetch_more = TRUE;
 }
 
+//TYPE 1: IFLESSEQUAL
 void if_less_equal(){
     
 
@@ -82,6 +84,7 @@ void if_less_equal(){
     fetch_more = TRUE;
 }
 
+//TYPE 2: IFEQUAL
 void if_equal(){
 
 
@@ -109,6 +112,7 @@ void if_equal(){
     fetch_more = TRUE;
 }
 
+//TYPE 4: IFNOTEQUAL
 void if_not_equal(){
 
 
@@ -136,6 +140,7 @@ void if_not_equal(){
     fetch_more = TRUE;
 }
 
+//TYPE 5: IFGREATER
 void if_greater(){
 
 
@@ -163,6 +168,7 @@ void if_greater(){
     fetch_more = TRUE;
 }
 
+//TYPE 6: IFGREATEREQUAL
 void if_greater_equal(){
 
     //Generates internal register
@@ -189,6 +195,7 @@ void if_greater_equal(){
     fetch_more = TRUE;
 }
 
+//TYPE 7: CALL
 void call_fn(){
 
     unsigned int address = 0;
@@ -204,10 +211,12 @@ void call_fn(){
     //Divide values by bytes
     hadle_val(mem_counter+4,values);
 
+    //Saves data to the buffer
     ditributed_val=(unsigned char *)malloc(sizeof(unsigned char)*4);
     memcpy(ditributed_val,values,sizeof(unsigned char)*4);
     mem_addr=cpu_register[15];
 
+    //Assign proper store action for next cycle
     sotrer_mem=store_mem;    
 
     //Move R15 to next location

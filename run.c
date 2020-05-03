@@ -177,26 +177,35 @@ int decode(){
             break;
         //OPCODE 8: LOAD
         case 8:
+            //Process proper internal register
             get_registers(internal_reg,3);
+            //Assigns memory for internal reigster forwarding purpose
             reg_forwarder = (int **)malloc(sizeof(internal_reg));
             for(int i=0; i<internal_reg_size; i++)
                 reg_forwarder[i] = (int*)malloc(sizeof(int));
+            //Copies memory from internal register to forwarder
             memcpy(reg_forwarder,internal_reg,sizeof(internal_reg));
             mem_counter+=2;
+            //Assign add execute operation to executer pointer
             executer=load_memory_ops;
             break;
         //OPCODE 9: STORE
         case 9:
+            //Process proper internal register
             get_registers(internal_reg,3);
+            //Assigns memory for internal reigster forwarding purpose
             reg_forwarder = (int **)malloc(sizeof(internal_reg));
             for(int i=0; i<internal_reg_size; i++)
                 reg_forwarder[i] = (int*)malloc(sizeof(int));
+            //Copies memory from internal register to forwarder
             memcpy(reg_forwarder,internal_reg,sizeof(internal_reg));
             mem_counter+=2;
+            //Assign add execute operation to executer pointer
             executer=store_memory_ops;
             break;
         //OPCODE A: STACK
         case 10:
+            //decode stack
             if(decode_stack()!=0)
                 return 4;
             break;
@@ -299,16 +308,19 @@ int decode_stack(){
 
     switch (ops)
     {
+    //RETURN
     case 0:
         //Execute return on next cycle
         executer=return_R15;
         //Buffer lock
         fetch_more = FALSE;
         return 0;
+    //PUSH
     case 1:
         executer=push_R15;
         mem_counter+=2;
         return 0;
+    //POP
     case 2:
         executer=pop_R15;
         mem_counter+=2;

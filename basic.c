@@ -202,6 +202,7 @@ void interrupt(){
         print_reset();
     }
     else{
+        //Prints memory
         print_blue();
         puts("MEMORY INFORMATION: DECIMAL(HEX)");
         for(int i=0; i<mem_SIZE; i++){
